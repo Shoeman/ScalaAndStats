@@ -1,6 +1,7 @@
 package com.ScalaAndStats
 
 import scala.math.Fractional.Implicits.infixFractionalOps
+import scala.math.sqrt
 
 object Variance {
 
@@ -16,4 +17,8 @@ object Variance {
     A.div(sumDiffsSquared, A.fromInt(values.size))
   }
 
+  def populationStandardDeviation[A](values: Seq[A])(implicit A: Fractional[A]): Double = {
+    val variance = populationVariance(values)
+    sqrt(variance.toDouble)
+  }
 }
