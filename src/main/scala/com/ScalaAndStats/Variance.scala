@@ -5,39 +5,42 @@ import scala.math.sqrt
 
 object Variance {
 
-  def populationVariance[A](values: Seq[A])(implicit A: Fractional[A]): A = {
-
-    if (values.isEmpty) {
-      return A.fromInt(0)
-    }
+  def sumVariance[A](values: Seq[A])(implicit A: Fractional[A]): A = {
     val mean = Averages.mean(values)
     val meanDiff: A => A = value => value - mean
-    val sumDiffsSquared = values.map(meanDiff).map(a => a * a).sum
-
-    A.div(sumDiffsSquared, A.fromInt(values.size))
+    values.map(meanDiff).map(a => a * a).sum
   }
 
-  // TODO refactor methods together
+  def varianceWithDivisor[A](divisor: Int)(values: Seq[A])(implicit A: Fractional[A]): A = {
+    val varianceSum = sumVariance(values)
+    A.div(varianceSum, A.fromInt(divisor))
+  }
+
+  def populationVariance[A](values: Seq[A])(implicit A: Fractional[A]): A = {
+
+    values.size match {
+      case 0 => A.fromInt(0)
+      case _ => varianceWithDivisor(values.size)(values)
+    }
+  }
+
   def sampleVariance[A](values: Seq[A])(implicit A: Fractional[A]): A = {
 
-    if (values.length <= 1) {
-      return A.fromInt(0)
+    values.size match {
+      case 0 | 1 => A.fromInt(0)
+      case _ => varianceWithDivisor(values.size - 1)(values)
     }
-    val mean = Averages.mean(values)
-    val meanDiff: A => A = value => value - mean
-    val sumDiffsSquared = values.map(meanDiff).map(a => a * a).sum
+  }
 
-    A.div(sumDiffsSquared, A.fromInt(values.size - 1))
+  def standardDeviation[A](variance: Seq[A] => A)(values: Seq[A])(implicit A: Fractional[A]): Double = {
+    sqrt(variance(values).toDouble)
   }
 
   def populationStandardDeviation[A](values: Seq[A])(implicit A: Fractional[A]): Double = {
-    val variance = populationVariance(values)
-    sqrt(variance.toDouble)
+    standardDeviation(populationVariance[A])(values)
   }
 
-  // TODO refactor methods together
   def sampleStandardDeviation[A](values: Seq[A])(implicit A: Fractional[A]): Double = {
-    val variance = sampleVariance(values)
-    sqrt(variance.toDouble)
+    standardDeviation(sampleVariance[A])(values)
   }
 }
